@@ -1,0 +1,34 @@
+name: CI/CD Pipeline
+on:
+    push:
+        branches: [main]
+permissions:
+    id-token: write
+    contents: read
+env:
+    AWS_REGION: us-east-1
+jobs:
+registry:
+runs-on: ubuntu-20.04
+steps:
+- name: Check Out
+uses: actions/checkout@v2
+- name: Configure AWS Credentials
+uses: aws-actions/configure-aws-credentials@v1
+with:
+role-to-assume: arn:aws:iam::<your-account-id>:oidc-provider/token.actions.githubusercontent.com
+aws-region: ${{ env.AWS_REGION }}
+- name: Create Registry
+id: create-registry
+run: |
+cd terraform/registry/
+
+terraform init \
+-backend-config=config/backend-config.tf \
+-reconfigure \
+-input=false
+
+terraform apply \
+-var-file=vars.tfvars \
+-input=false \
+-auto-approve
